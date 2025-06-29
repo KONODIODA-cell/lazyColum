@@ -1,0 +1,149 @@
+package com.shaw.lazycolum
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.Divider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+
+data class MyItem(val id: Int, val title: String, val description: String, val timeStamp: Long)
+
+class MainActivity1 : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            MyApp()
+        }
+    }
+}
+
+@Composable
+fun MyApp() {
+    MaterialTheme {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Column {
+                Text(
+                    text = "Lazy Column Example",
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.padding(16.dp)
+                )
+
+                // 示例数据
+                val items = remember {
+                    List(1000) { index ->
+                        MyItem(
+                            id = index,
+                            title = "Item $index",
+                            description = "This is description for item $index",
+                            timeStamp = System.currentTimeMillis()
+                        )
+                    }
+                }
+
+                // 两种列表的对比
+                Text("Lazy Column", modifier = Modifier.padding(8.dp))
+                LazyColumnExample(items)
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text("Regular Column", modifier = Modifier.padding(8.dp))
+                NonLazyList(items, Modifier.height(300.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun LazyColumnExample(items: List<MyItem>) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(300.dp)
+    ) {
+        itemsIndexed(items) { index, item ->
+            key(item.id) {
+                MyListItem(item)
+                if (index < items.lastIndex) {
+                    Divider()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun MyListItem(item: MyItem) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        Row {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = item.title,
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = item.description,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+            Text(
+                text = "创建的时间戳为： "+item.timeStamp.toString(),
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+    }
+}
+
+@Composable
+fun NonLazyList(
+    items: List<MyItem>,
+    modifier: Modifier = Modifier
+) {
+    val scrollState = rememberScrollState()
+
+    Column(
+        modifier = modifier
+            .verticalScroll(scrollState)
+            .fillMaxWidth()
+    ) {
+        items.forEach { item ->
+            key(item.id) { // 仍建议使用key避免重组问题
+                MyListItem(item)
+            }
+            Divider() // 分隔线
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewMyApp() {
+    MyApp()
+}
